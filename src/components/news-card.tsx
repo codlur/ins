@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { RSS_SOURCE_LOGOS } from "@/lib/rss-service";
 import { highlightImportantWords } from "@/lib/utils";
-import { BookmarkButton } from "@/components/bookmark-button";
 
 interface NewsCardProps {
   title: string;
@@ -52,24 +51,15 @@ export function NewsCard({
   // Highlight important words in the title
   const highlightedTitle = highlightImportantWords(title);
 
-  // Prepare item for bookmarking
-  const bookmarkItem = {
-    type: 'news',
-    title,
-    sourceName,
-    sourceUrl,
-    publishedAt
-  };
-
   return (
-    <div className="py-4">
+    <div className="h-full flex flex-col">
       <h3 
-        className="text-lg font-light mb-2 line-clamp-3 cursor-pointer hover:text-primary transition-colors min-h-[4.5rem]"
+        className="text-lg font-light mb-3 line-clamp-3 cursor-pointer hover:text-primary transition-colors min-h-[4.5rem]"
         onClick={handleRedirect}
       >
         <span dangerouslySetInnerHTML={{ __html: highlightedTitle }} />
       </h3>
-      <div className="flex items-center justify-between mt-4">
+      <div className="flex items-center justify-between mt-auto pt-4">
         <div className="flex items-center gap-1.5">
           <img 
             src={getSourceLogo(sourceName)} 
@@ -86,12 +76,6 @@ export function NewsCard({
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {formatDate(publishedAt)}
           </span>
-          <BookmarkButton 
-            item={bookmarkItem}
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 hover:bg-muted flex-shrink-0"
-          />
           <Button 
             variant="ghost" 
             size="icon"
@@ -102,7 +86,6 @@ export function NewsCard({
           </Button>
         </div>
       </div>
-      <div className="mt-4 border-t border-muted"></div>
     </div>
   );
 }

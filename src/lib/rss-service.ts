@@ -1,7 +1,7 @@
 import Parser from 'rss-parser';
 
 // RSS feed URLs for the specified sources
-const RSS_FEEDS = {
+export const RSS_FEEDS = {
   'Futurism': 'https://futurism.com/feed',
   'The Verge': 'https://www.theverge.com/rss/index.xml',
   'TechCrunch': 'https://techcrunch.com/feed/',
@@ -21,7 +21,21 @@ const RSS_FEEDS = {
   'Crunchbase AI': 'https://news.crunchbase.com/sections/ai/feed/',
   'NY Times AI': 'https://www.nytimes.com/svc/collections/v1/publish/https://www.nytimes.com/spotlight/artificial-intelligence/rss.xml',
   // Additional source
-  'Futurism Ethics': 'https://futurism.com/category/ethics/feed'
+  'Futurism Ethics': 'https://futurism.com/category/ethics/feed',
+  // Wired.com RSS feed
+  'Wired': 'https://www.wired.com/feed/rss',
+  // The Decoder RSS feed
+  'The Decoder': 'https://the-decoder.com/feed/',
+  // Substack RSS feed
+  'aisearch': 'https://aisearch.substack.com/feed',
+  // Additional sources
+  'The Creators AI': 'https://thecreatorsai.com/feed',
+  'Superhuman': 'https://www.superhuman.ai/feed',
+  'The Rundown': 'https://www.therundown.ai/feed',
+  'The Neuron': 'https://www.theneuron.ai/newsletter/feed',
+  'DeepLearning.AI': 'https://www.deeplearning.ai/the-batch/feed',
+  // Slashdot RSS feed
+  'Slashdot': 'https://rss.slashdot.org/Slashdot/slashdotMain'
 };
 
 // Source logos mapping
@@ -46,6 +60,20 @@ export const RSS_SOURCE_LOGOS: Record<string, string> = {
   'NY Times AI': '/nytimes-logo.png',
   // Additional logo mapping
   'Futurism Ethics': '/futurism-logo.png',
+  // Wired logo mapping
+  'Wired': '/wired-logo.png',
+  // The Decoder logo mapping
+  'The Decoder': '/the-decoder-logo.png',
+  // Substack logo mapping
+  'aisearch': '/aisearch-logo.png',
+  // Additional source logos
+  'The Creators AI': '/thecreatorsai-logo.png',
+  'Superhuman': '/superhuman-logo.png',
+  'The Rundown': '/therundown-logo.png',
+  'The Neuron': '/theneuron-logo.png',
+  'DeepLearning.AI': '/deeplearning-logo.png',
+  // Slashdot logo mapping
+  'Slashdot': '/slashdot-logo.png',
   // Default logo
   'default': '/globe.svg'
 };
@@ -84,7 +112,11 @@ const AI_KEYWORDS = [
   'ai model', 'ai assistant', 'natural language processing', 'nlp',
   'computer vision', 'reinforcement learning', 'transformer',
   'stable diffusion', 'dall-e', 'midjourney', 'imagen',
-  'influencer', 'social media', 'content creator', 'youtube', 'tiktok', 'instagram'
+  'influencer', 'social media', 'content creator', 'youtube', 'tiktok', 'instagram',
+  // Additional keywords for Slashdot AI content
+  'algorithm', 'data science', 'robotics', 'automation', 'neural net', 'tensorflow',
+  'pytorch', 'openai', 'anthropic', 'claude', 'gemini', 'bard', 'copilot',
+  'autonomous', 'predictive', 'analytics', 'big data', 'data mining'
 ];
 
 // Function to check if text contains AI-related keywords
@@ -168,28 +200,17 @@ export async function fetchRSSNews(page: number = 1, limit: number = 50): Promis
   try {
     const articles: RSSArticle[] = [];
     
-    // Calculate date for last 7 days
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    // Log for debugging - remove in production
-    console.log('Filtering RSS articles for last 7 days:', sevenDaysAgo.toISOString(), 'to', now.toISOString());
-    
     // Fetch from all RSS feeds concurrently with better error handling
     const feedPromises = Object.entries(RSS_FEEDS).map(async ([sourceName, feedUrl]) => {
       try {
         const feed = await parser.parseURL(feedUrl);
         
-        // Filter items to only include those from the last 7 days
-        const recentItems = feed.items.filter(item => {
-          if (!item.isoDate && !item.pubDate) return false;
-          const itemDate = new Date(item.isoDate || item.pubDate!);
-          return itemDate >= sevenDaysAgo && itemDate <= now;
-        });
+        // Remove date filtering to show all articles, not just recent ones
+        const allItems = feed.items;
         
-        // Take more articles from each source to ensure we have enough after filtering
-        // Increased from 30 to 50 to capture more articles over 7 days
-        const feedArticles = recentItems.slice(0, 50).map(item => ({
+        // Increase the number of articles fetched from each source to ensure we get all news
+        // Using a larger slice (0, 300) to capture more articles from each source
+        const feedArticles = allItems.slice(0, 300).map(item => ({
           source: {
             id: sourceName,  // Use the exact source name as the ID to match the logo mapping
             name: sourceName
@@ -267,18 +288,38 @@ export async function fetchRSSNews(page: number = 1, limit: number = 50): Promis
       });
       
       // Combine AI articles with general tech articles, prioritizing AI content
-      finalArticles = [...filteredArticles, ...lessFilteredArticles].slice(0, 200);
+      finalArticles = [...filteredArticles, ...lessFilteredArticles].slice(0, 1000);
     }
     
-    // Implement pagination
-    const startIndex = (page - 1) * limit;
-    const paginatedArticles = finalArticles.slice(startIndex, startIndex + limit);
+    // Remove pagination limits to allow unlimited scrolling
+    // Instead of pagination, we'll return all articles but shuffle them to provide variety
+    // This ensures we never run out of content for infinite scroll
     
-    return {
-      status: 'ok',
-      totalResults: finalArticles.length,
-      articles: paginatedArticles
-    };
+    // For infinite scroll, we want to provide a good mix of articles each time
+    // We'll take a slice based on the page number but ensure we don't run out
+    const startIndex = ((page - 1) * limit) % Math.max(finalArticles.length, 1);
+    let endIndex = startIndex + limit;
+    
+    // If we're near the end, wrap around to the beginning to ensure we always have content
+    if (endIndex > finalArticles.length) {
+      const firstPart = finalArticles.slice(startIndex);
+      const secondPart = finalArticles.slice(0, endIndex - finalArticles.length);
+      const paginatedArticles = [...firstPart, ...secondPart];
+      
+      return {
+        status: 'ok',
+        totalResults: finalArticles.length,
+        articles: paginatedArticles
+      };
+    } else {
+      const paginatedArticles = finalArticles.slice(startIndex, endIndex);
+      
+      return {
+        status: 'ok',
+        totalResults: finalArticles.length,
+        articles: paginatedArticles
+      };
+    }
   } catch (error) {
     console.error('Error fetching RSS news:', error);
     // Return a fallback with some default content
@@ -300,18 +341,14 @@ export async function fetchRSSNewsFromSource(sourceName: string, page: number = 
     
     const feed = await parser.parseURL(feedUrl);
     
-    // Calculate date for last 7 days
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    // Remove the 7-day date filter to show older news
+    // Previously: const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     
-    // Filter items to only include those from the last 7 days
-    const recentItems = feed.items.filter(item => {
-      if (!item.isoDate && !item.pubDate) return false;
-      const itemDate = new Date(item.isoDate || item.pubDate!);
-      return itemDate >= sevenDaysAgo && itemDate <= now;
-    });
+    // Use all items instead of filtering by date
+    // Previously filtered items to only include those from the last 7 days
+    const allItems = feed.items;
     
-    const articles: RSSArticle[] = recentItems.map(item => ({
+    const articles: RSSArticle[] = allItems.map(item => ({
       source: {
         id: sourceName,  // Use the exact source name as the ID to match the logo mapping
         name: sourceName

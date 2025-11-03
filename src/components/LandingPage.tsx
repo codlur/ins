@@ -78,7 +78,7 @@ export default function LandingPage() {
             </div>
             <nav className="flex items-center">
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Login</Link>
+                <Link href="/signin">Login</Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="/signup">Sign Up</Link>
@@ -134,7 +134,7 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
                   <Button size="lg" asChild>
-                    <Link href="/app">
+                    <Link href="/signup">
                       Get Started <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -233,10 +233,10 @@ export default function LandingPage() {
             </p>
           </div>
           <nav className="flex gap-4 sm:gap-6">
-            <Link href="#" className="text-sm hover:underline underline-offset-4">
+            <Link href="/terms" className="text-sm hover:underline underline-offset-4">
               Terms
             </Link>
-            <Link href="#" className="text-sm hover:underline underline-offset-4">
+            <Link href="/privacy" className="text-sm hover:underline underline-offset-4">
               Privacy
             </Link>
             <Link href="#" className="text-sm hover:underline underline-offset-4">

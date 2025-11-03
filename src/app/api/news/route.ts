@@ -6,8 +6,8 @@ export async function GET(request: Request) {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
-    // Increase limit to ensure we get all 7 days of news
-    const limit = parseInt(searchParams.get('limit') || '100');
+    // Set a high limit to fetch more news articles per request
+    const limit = parseInt(searchParams.get('limit') || '50');
     
     // Fetch only RSS news with pagination
     const rssNews = await fetchRSSNews(page, limit);

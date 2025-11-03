@@ -18,8 +18,8 @@ export function FaviconHandler() {
       link.href = src;
     };
 
-    // Always use teal favicon
-    updateFavicon('/favicon-teal.png');
+    // Use light favicon (blue) instead of teal
+    updateFavicon('/favicon-light.png');
   }, [theme]);
 
   return null;
